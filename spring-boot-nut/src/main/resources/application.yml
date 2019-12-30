@@ -1,0 +1,41 @@
+# ===============================
+# = LOGGING
+# ===============================
+logging:
+  level:
+    sk.janobono: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
+
+# ===============================
+# = JPA / HIBERNATE
+# ===============================
+spring:
+  datasource:
+    url: ${NUT_DB_URL}
+    username: ${NUT_DB_USER}
+    password: ${NUT_DB_PASSWORD}
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        enable_lazy_load_no_trans: true
+        event:
+          merge:
+            entity_copy_observer: allow
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    open-in-view: false
+
+  flyway:
+    check-location: true
+
+  # ===============================
+  # = RABBITMQ
+  # ===============================
+  rabbitmq:
+    host: ${NUT_RABBIT_MQ_HOST}
+    port: ${NUT_RABBIT_MQ_PORT}
+    username: ${NUT_RABBIT_MQ_USERNAME}
+    password: ${NUT_RABBIT_MQ_PASSWORD}

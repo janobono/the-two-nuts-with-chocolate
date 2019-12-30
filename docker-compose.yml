@@ -1,0 +1,23 @@
+version: "3.2"
+
+services:
+  postgres:
+    image: postgres:9-alpine
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_DB=test
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - 5672:5672
+      - 5671:5671
+      - 15672:15672
+      - 15671:15671
+    environment:
+      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_VHOST=vhost
