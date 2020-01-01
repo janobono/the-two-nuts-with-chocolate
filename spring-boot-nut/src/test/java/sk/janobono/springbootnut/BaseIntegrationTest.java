@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import org.flywaydb.core.Flyway;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -22,8 +23,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.WebApplicationContext;
+import org.testcontainers.containers.Container;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.RabbitMQContainer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,28 +37,39 @@ import java.util.List;
 @DirtiesContext
 public abstract class BaseIntegrationTest {
 
-    public static PostgreSQLContainer postgres = new PostgreSQLContainer<>();
+    public static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:9-alpine");
 
-    public static RabbitMQContainer rabbitmq = new RabbitMQContainer();
+    public static KafkaContainer kafka = new KafkaContainer();
 
     @BeforeClass
     public static void startContainers() {
         postgres.start();
-        System.setProperty("NUT_DB_URL", "jdbc:postgresql://localhost:" + postgres.getMappedPort(5432) + "/" + postgres.getDatabaseName());
+        System.setProperty("NUT_DB_URL", postgres.getJdbcUrl());
         System.setProperty("NUT_DB_USER", postgres.getUsername());
         System.setProperty("NUT_DB_PASSWORD", postgres.getPassword());
 
-        rabbitmq.start();
-        System.setProperty("NUT_RABBIT_MQ_HOST", "localhost");
-        System.setProperty("NUT_RABBIT_MQ_PORT", "" + rabbitmq.getMappedPort(5672));
-        System.setProperty("NUT_RABBIT_MQ_USERNAME", rabbitmq.getAdminUsername());
-        System.setProperty("NUT_RABBIT_MQ_PASSWORD", rabbitmq.getAdminPassword());
+        kafka.start();
+        createTopic("spring-boot-nut");
+        System.setProperty("NUT_KAFKA_BOOTSTRAP_SERVERS", kafka.getBootstrapServers());
+    }
+
+    private static void createTopic(String topicName) {
+        String createTopic =
+                String.format(
+                        "/usr/bin/kafka-topics --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic %s",
+                        topicName);
+        try {
+            final Container.ExecResult execResult = kafka.execInContainer("/bin/sh", "-c", createTopic);
+            if (execResult.getExitCode() != 0) Assert.fail();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @AfterClass
     public static void stopContainers() {
         postgres.stop();
-        rabbitmq.stop();
+        kafka.stop();
     }
 
     public EnhancedRandom enhancedRandom = TestEnhancedRandomBuilder.build();

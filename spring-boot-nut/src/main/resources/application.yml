@@ -32,10 +32,16 @@ spring:
     check-location: true
 
   # ===============================
-  # = RABBITMQ
+  # = KAFKA
   # ===============================
-  rabbitmq:
-    host: ${NUT_RABBIT_MQ_HOST}
-    port: ${NUT_RABBIT_MQ_PORT}
-    username: ${NUT_RABBIT_MQ_USERNAME}
-    password: ${NUT_RABBIT_MQ_PASSWORD}
+  kafka:
+    consumer:
+      bootstrap-servers: ${NUT_KAFKA_BOOTSTRAP_SERVERS}
+      group-id: group_id
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      bootstrap-servers: ${NUT_KAFKA_BOOTSTRAP_SERVERS}
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import sk.janobono.springbootnut.config.AMQPConfig;
 import sk.janobono.springbootnut.domain.RoleName;
 import sk.janobono.springbootnut.domain.User;
 import sk.janobono.springbootnut.mapper.UserMapper;
@@ -28,7 +26,7 @@ public class UserService {
 
     private ObjectMapper objectMapper;
 
-    private RabbitTemplate rabbitTemplate;
+    private KafkaProducer kafkaProducer;
 
     private RoleRepository roleRepository;
 
@@ -42,8 +40,8 @@ public class UserService {
     }
 
     @Autowired
-    public void setRabbitTemplate(RabbitTemplate rabbitTemplate) {
-        this.rabbitTemplate = rabbitTemplate;
+    public void setKafkaProducer(KafkaProducer kafkaProducer) {
+        this.kafkaProducer = kafkaProducer;
     }
 
     @Autowired
@@ -87,7 +85,7 @@ public class UserService {
         });
         UserSO result = userMapper.userToUserSO(userRepository.save(user));
         try {
-            rabbitTemplate.convertAndSend(AMQPConfig.TOPIC_EXCHANGE_NAME, "nut.add", objectMapper.writeValueAsString(result));
+            kafkaProducer.sendMessage(objectMapper.writeValueAsString(result));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
