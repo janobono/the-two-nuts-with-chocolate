@@ -36,7 +36,7 @@ docker-compose up
 
 ### first start
 
-Kafka topics are not created at firts start so we have to create them:
+Kafka topics are not created at first start so we have to create them:
 ```shell script
 docker exec -it the-two-nuts-with-chocolate_kafka_1 kafka-topics.sh --create --zookeeper zookeeper:2181 --replication-factor 1 --partitions 1 --topic quarkus-nut
 docker exec -it the-two-nuts-with-chocolate_kafka_1 kafka-topics.sh --create --zookeeper zookeeper:2181 --replication-factor 1 --partitions 1 --topic spring-boot-nut
