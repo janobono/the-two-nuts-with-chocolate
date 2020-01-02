@@ -4,12 +4,13 @@ services:
   postgres:
     image: postgres:9-alpine
     environment:
-      - POSTGRES_DB=test
-      - POSTGRES_USER=test
-      - POSTGRES_PASSWORD=test
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
     networks:
       - backend
     volumes:
+      - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh:ro
       - postgres-data:/var/lib/postgresql/data
 
   zookeeper:
@@ -30,12 +31,27 @@ services:
       - kafka-log:/kafka/log
       - kafka-data:/kafka/data
 
+  quarkus-nut:
+    image: janobono/quarkus-nut-chocolate:latest
+    environment:
+      - NUT_DB_URL=jdbc:postgresql://postgres:5432/quarkus
+      - NUT_DB_USER=quarkus
+      - NUT_DB_PASSWORD=quarkus
+      - NUT_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    ports:
+      - 8081:8080
+    networks:
+      - backend
+    depends_on:
+      - postgres
+      - kafka
+
   spring-boot-nut:
     image: janobono/spring-boot-nut-chocolate:latest
     environment:
-      - NUT_DB_URL=jdbc:postgresql://postgres:5432/test
-      - NUT_DB_USER=test
-      - NUT_DB_PASSWORD=test
+      - NUT_DB_URL=jdbc:postgresql://postgres:5432/springboot
+      - NUT_DB_USER=springboot
+      - NUT_DB_PASSWORD=springboot
       - NUT_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
     ports:
       - 8082:8080
