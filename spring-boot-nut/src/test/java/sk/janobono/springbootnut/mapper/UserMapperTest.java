@@ -1,18 +1,15 @@
 package sk.janobono.springbootnut.mapper;
 
 import io.github.benas.randombeans.api.EnhancedRandom;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import sk.janobono.springbootnut.TestEnhancedRandomBuilder;
 import sk.janobono.springbootnut.domain.User;
 import sk.janobono.springbootnut.so.UserSO;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = {UserMapperImpl.class})
 public class UserMapperTest {
 

@@ -5,11 +5,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.benas.randombeans.api.EnhancedRandom;
 import org.flywaydb.core.Flyway;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,7 +17,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.StringUtils;
@@ -31,17 +29,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest()
+@SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext
 public abstract class BaseIntegrationTest {
 
-    public static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:9-alpine");
+    protected static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:9-alpine");
 
-    public static KafkaContainer kafka = new KafkaContainer();
+    protected static KafkaContainer kafka = new KafkaContainer();
 
-    @BeforeClass
+    @BeforeAll
     public static void startContainers() {
         postgres.start();
         System.setProperty("NUT_DB_URL", postgres.getJdbcUrl());
@@ -66,7 +63,7 @@ public abstract class BaseIntegrationTest {
         }
     }
 
-    @AfterClass
+    @AfterAll
     public static void stopContainers() {
         postgres.stop();
         kafka.stop();
@@ -86,7 +83,7 @@ public abstract class BaseIntegrationTest {
     @Autowired
     public ObjectMapper objectMapper;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         flyway.clean();
         flyway.migrate();
