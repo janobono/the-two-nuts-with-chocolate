@@ -13,10 +13,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(classes = {UserMapperImpl.class})
 public class UserMapperTest {
 
-    public static EnhancedRandom enhancedRandom = TestEnhancedRandomBuilder.build();
+    private static EnhancedRandom enhancedRandom = TestEnhancedRandomBuilder.build();
+
+    private UserMapper userMapper;
 
     @Autowired
-    public UserMapper userMapper;
+    public void setUserMapper(UserMapper userMapper) {
+        this.userMapper = userMapper;
+    }
 
     @Test
     public void userToUserSO() {

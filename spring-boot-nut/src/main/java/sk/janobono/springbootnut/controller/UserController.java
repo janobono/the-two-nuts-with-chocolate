@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.janobono.springbootnut.service.UserService;
 import sk.janobono.springbootnut.so.UserSO;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping(value = "/user/")
 public class UserController {
@@ -42,13 +44,13 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserSO> addUser(@RequestBody UserSO userSO) {
+    public ResponseEntity<UserSO> addUser(@Valid @RequestBody UserSO userSO) {
         LOGGER.debug("addUser({})", userSO);
         return new ResponseEntity<>(userService.addUser(userSO), HttpStatus.CREATED);
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<UserSO> setUser(@PathVariable("id") Long id, @RequestBody UserSO userSO) {
+    public ResponseEntity<UserSO> setUser(@PathVariable("id") Long id, @Valid @RequestBody UserSO userSO) {
         LOGGER.debug("setUser({},{})", id, userSO);
         userSO.setId(id);
         return new ResponseEntity<>(userService.setUser(userSO), HttpStatus.OK);

@@ -1,61 +1,94 @@
 package sk.janobono.quarkusnut.controller;
 
 import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.containers.Container;
-import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.mapstruct.factory.Mappers;
+import sk.janobono.quarkusnut.BaseIntegrationTest;
+import sk.janobono.quarkusnut.domain.User;
+import sk.janobono.quarkusnut.mapper.UserMapper;
+import sk.janobono.quarkusnut.repository.UserRepository;
+import sk.janobono.quarkusnut.so.Page;
+import sk.janobono.quarkusnut.so.Pageable;
+import sk.janobono.quarkusnut.so.UserSO;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.is;
+import javax.inject.Inject;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @QuarkusTest
-public class UserControllerTest {
+public class UserControllerTest extends BaseIntegrationTest {
 
-    public static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:9-alpine");
+    private static final UserMapper userMapper = Mappers.getMapper(UserMapper.class);
 
-    public static KafkaContainer kafka = new KafkaContainer();
+    @Inject
+    UserRepository userRepository;
 
-    @BeforeAll
-    public static void startContainers() {
-        postgres.start();
-        System.setProperty("NUT_DB_URL", postgres.getJdbcUrl());
-        System.setProperty("NUT_DB_USER", postgres.getUsername());
-        System.setProperty("NUT_DB_PASSWORD", postgres.getPassword());
-
-        kafka.start();
-        createTopic("quarkus-boot-nut");
-        System.setProperty("NUT_KAFKA_BOOTSTRAP_SERVERS", kafka.getBootstrapServers());
-    }
-
-    private static void createTopic(String topicName) {
-        String createTopic =
-                String.format(
-                        "/usr/bin/kafka-topics --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic %s",
-                        topicName);
-        try {
-            final Container.ExecResult execResult = kafka.execInContainer("/bin/sh", "-c", createTopic);
-            if (execResult.getExitCode() != 0) throw new RuntimeException("Kafka topic not created!");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+    @Test
+    public void getUsers() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            createRandomUser();
         }
-    }
-
-    @AfterAll
-    public static void stopContainers() {
-        postgres.stop();
-        kafka.stop();
+        RequestSpecification httpRequest = RestAssured.given();
+        Response response = httpRequest.get(paginatedUri("/user/", 0, 5, "username", Pageable.SortDirection.ASC));
+        assertThat(response.getStatusCode()).isEqualTo(javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        Page<UserSO> result = mapPagedResponse(response.body().asString(), UserSO.class);
+        assertThat(result.getContent().size()).isEqualTo(5);
     }
 
     @Test
-    public void testHelloEndpoint() {
-        given()
-                .when().get("/user")
-                .then()
-                .statusCode(200)
-                .body(is("hello"));
+    public void getUser() throws Exception {
+        User user = createRandomUser();
+        String uri = "/user/" + user.getId();
+
+        RequestSpecification httpRequest = RestAssured.given();
+        Response response = httpRequest.get(uri);
+        assertThat(response.getStatusCode()).isEqualTo(javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        UserSO userSO = mapFromJson(response.body().asString(), UserSO.class);
+        assertThat(user).isEqualToIgnoringGivenFields(userSO, "roles");
     }
 
+    @Test
+    public void addUser() throws Exception {
+        UserSO userSO = enhancedRandom.nextObject(UserSO.class, "id");
+        RequestSpecification httpRequest = RestAssured.given();
+        Response response = httpRequest.contentType(ContentType.JSON).body(mapToJson(userSO)).post("/user/");
+        assertThat(response.getStatusCode()).isEqualTo(javax.ws.rs.core.Response.Status.CREATED.getStatusCode());
+        UserSO saved = mapFromJson(response.body().asString(), UserSO.class);
+        assertThat(userSO).isEqualToIgnoringGivenFields(saved, "id", "username");
+        assertThat(userSO.getUsername().toLowerCase()).isEqualTo(saved.getUsername());
+    }
+
+    @Test
+    public void setUser() throws Exception {
+        User user = createRandomUser();
+        UserSO userSO = userMapper.userToUserSO(user);
+        userSO.setUsername("test0123");
+        String uri = "/user/" + user.getId();
+        RequestSpecification httpRequest = RestAssured.given();
+        Response response = httpRequest.contentType(ContentType.JSON).body(mapToJson(userSO)).put(uri);
+        assertThat(response.getStatusCode()).isEqualTo(javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        UserSO saved = mapFromJson(response.body().asString(), UserSO.class);
+        assertThat(userSO).isEqualToIgnoringGivenFields(saved);
+    }
+
+    @Test
+    public void deleteUser() {
+        User user = createRandomUser();
+        String uri = "/user/" + user.getId();
+        RequestSpecification httpRequest = RestAssured.given();
+        Response response = httpRequest.delete(uri);
+        assertThat(response.getStatusCode()).isEqualTo(javax.ws.rs.core.Response.Status.OK.getStatusCode());
+        assertThat(userRepository.existsById(user.getId())).isFalse();
+    }
+
+    private User createRandomUser() {
+        UserSO userSO = enhancedRandom.nextObject(UserSO.class, "id", "roles");
+        User user = userMapper.userSOToUser(userSO);
+        userRepository.save(user);
+        return user;
+    }
 }

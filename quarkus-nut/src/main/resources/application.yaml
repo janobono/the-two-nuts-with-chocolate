@@ -1,9 +1,17 @@
 quarkus:
+  log:
+    level: ALL
   datasource:
     url: ${NUT_DB_URL}
     driver: ${NUT_DB_DRIVER:org.postgresql.Driver}
     username: ${NUT_DB_USER}
     password: ${NUT_DB_PASSWORD}
+  hibernate-orm:
+    log:
+      sql: true
+    database:
+      generation: none
+    sql-load-script: no-file
   flyway:
     migrate-at-start: true
 
