@@ -26,7 +26,7 @@ public class UserService {
 
     private ObjectMapper objectMapper;
 
-    private KafkaProducer kafkaProducer;
+    private KafkaProducerService kafkaProducerService;
 
     private RoleRepository roleRepository;
 
@@ -40,8 +40,8 @@ public class UserService {
     }
 
     @Autowired
-    public void setKafkaProducer(KafkaProducer kafkaProducer) {
-        this.kafkaProducer = kafkaProducer;
+    public void setKafkaProducerService(KafkaProducerService kafkaProducerService) {
+        this.kafkaProducerService = kafkaProducerService;
     }
 
     @Autowired
@@ -85,7 +85,7 @@ public class UserService {
         });
         UserSO result = userMapper.userToUserSO(userRepository.save(user));
         try {
-            kafkaProducer.sendMessage(objectMapper.writeValueAsString(result));
+            kafkaProducerService.sendMessage(objectMapper.writeValueAsString(result));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

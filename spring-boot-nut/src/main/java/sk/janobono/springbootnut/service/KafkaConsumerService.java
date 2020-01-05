@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 
 @Service
-public class KafkaConsumer {
+public class KafkaConsumerService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaConsumer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(KafkaConsumerService.class);
 
     @KafkaListener(topics = "spring-boot-nut", groupId = "group_id")
     public void consume(String message) throws IOException {

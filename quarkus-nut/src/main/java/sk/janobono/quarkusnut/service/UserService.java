@@ -1,5 +1,7 @@
 package sk.janobono.quarkusnut.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mapstruct.factory.Mappers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +26,16 @@ public class UserService {
 
     private static final UserMapper userMapper = Mappers.getMapper(UserMapper.class);
 
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     @Inject
     RoleRepository roleRepository;
 
     @Inject
     UserRepository userRepository;
+
+    @Inject
+    KafkaProducerService kafkaProducerService;
 
     public Page<UserSO> getUsers(Pageable pageable) {
         LOGGER.debug("getUsers({})", pageable);
@@ -66,11 +73,11 @@ public class UserService {
         userSO.getRoles().forEach(roleName -> user.getRoles().add(roleRepository.findByName(RoleName.valueOf(roleName))));
         userRepository.save(user);
         UserSO result = userMapper.userToUserSO(user);
-/*        try {
-            kafkaProducer.sendMessage(objectMapper.writeValueAsString(result));
+        try {
+            kafkaProducerService.sendMessage(objectMapper.writeValueAsString(result));
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
-        }*/
+        }
         return result;
     }
 
