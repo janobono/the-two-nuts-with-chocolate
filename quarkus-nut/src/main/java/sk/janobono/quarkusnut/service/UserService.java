@@ -71,8 +71,7 @@ public class UserService {
         User user = userMapper.userSOToUser(userSO);
         user.getRoles().clear();
         userSO.getRoles().forEach(roleName -> user.getRoles().add(roleRepository.findByName(RoleName.valueOf(roleName))));
-        userRepository.save(user);
-        UserSO result = userMapper.userToUserSO(user);
+        UserSO result = userMapper.userToUserSO(userRepository.save(user));
         try {
             kafkaProducerService.sendMessage(objectMapper.writeValueAsString(result));
         } catch (JsonProcessingException e) {

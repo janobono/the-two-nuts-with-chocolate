@@ -53,9 +53,10 @@ public class UserRepository {
     }
 
     @Transactional
-    public void save(User user) {
+    public User save(User user) {
         em.persist(user);
         em.flush();
+        return user;
     }
 
     @Transactional
