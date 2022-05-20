@@ -9,7 +9,7 @@ application close to production needs (Restful/JPA/Messaging).
 
 Database implementation - [Postgres](https://www.postgresql.org/)
 
-Database migration - [Flyway](https://flywaydb.org/)
+Database versioning - [Flyway](https://flywaydb.org/)
 
 Messaging platform - [Kafka](https://kafka.apache.org/)
 
